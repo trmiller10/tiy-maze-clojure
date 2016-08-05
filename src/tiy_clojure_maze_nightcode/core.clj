@@ -18,11 +18,15 @@
            :right? true,
            :start? false,
            :finish? false})))))
+           
+        
 
 
 ;returns true if room exists (value of room does not equal nil) and has not been visited
 (defn valid-unvisited-room? [room]
     (and room (= false (:visited? room))))
+(defn dead-end-room? [rooms row col])
+  
 
 (defn possible-neighbors [rooms row col]
   ;returns a vector 
@@ -41,8 +45,11 @@
     (if (pos? (count neighbors))
      ;choose a random neighbor
      (rand-nth neighbors)
-     ;if count of neighbors is 0 (false), return nil
+     ;if count of neighbors is 0 (false), mark room as dead-end and return nil
+    
      nil)))
+
+      
 
 (defn tear-down-wall [rooms old-row old-col new-row new-col]
   ;cond evaluates each test in turn, first test that returns true has its associated
@@ -74,6 +81,9 @@
       ;if the two mazes do not match, it runs itself again using the duplicate new-rooms maze as the to-be original rooms maze 
       (create-maze-loop new-rooms old-row old-col new-row new-col))))
 
+;if the collection returned by filtering through the flattened rooms for rooms where :finish? is true is empty, return true
+(defn last-room? [rooms row col] (empty? (filter :finish? (flatten rooms))))
+
 (defn create-maze [rooms row col]
   ;mark the current room as visited
   (let [rooms (assoc-in rooms [row col :visited?] true)
@@ -81,16 +91,16 @@
         rooms (assoc-in rooms [0 0 :start?] true)
         ;find the next room by running random-neighbor
         next-room (random-neighbor rooms row col)]
-        
     ;if next-room exists (true)
     (if next-room
       ;remove current room's wall by passing current room's coordinates and retrieving next room's coordinates
       (let [rooms (tear-down-wall rooms row col (:row next-room) (:col next-room))]
         ;then run create-maze-loop using current room as old room and next-room as current room
         (create-maze-loop rooms row col (:row next-room) (:col next-room)))
-      ;if next-room does not exist (false), return rooms and try again
-      rooms)))
-
+      
+      (if (last-room? rooms row col)
+       (assoc-in rooms [row col :finish?] true)
+       rooms))))
 
 
 
@@ -109,27 +119,47 @@
       (print "|")
       ;nested doseq here repeatedly executes over each ROOM in the current ROW 
       (doseq [room row]
-        (if (:start? room)
+        
+        (cond
+          (and (:start? room) (:bottom? room)) (print "⍶")
+          (:start? room) (print "α")
+          (and (:finish? room) (:bottom? room)) (print "⨱")
+          (:finish? room) (print "x")
+          (:bottom? room) (print "_") :else (print " "))
+        (if (:right? room) (print "|") (print " ")))
+      (println))))
+                      
+
+                               
+                              
+                               
+                                
+                                
+
+      
+                             
+        
+        
+;(if (:start? room)
           ;true
           ;if bottom true, print ⍶
-          (if (:bottom? room)
-            (print "⍶")
-            (if (:right? room)
-              (print "α")))
+  ;(if (:bottom? room)
+ ;   (print "⍶")
+   ; (if (:right? room)
+    ;  (print "α")))
           ;false
           ;if bottom false, 
           ;tests if room is demarcated as having a bottom wall
-          (if (:bottom? room)
+  ;(if (:bottom? room)
           ;if true, prints the bottom wall
-           (print "_")
+  ; (print "_")
           ;if false, prints a space
-           (print " ")))       
-      
+   ;(print " ")))       
         ;tests if room is demarcated as having a right wall
-        (if (:right? room)
+;(if (:right? room)
           ;if true, prints the right wall
-          (print "|")
+ ; (print "|")
           ;if false, prints a space
-          (print " ")))
+  ;(print " "))
       ;pops down to next line
-      (println))))
+;(println)
